@@ -17,11 +17,32 @@ headerRequest = {
     'Content-Type': 'application/json'
 }
 
-def getCurrentAction(company : str):
-    data = yf.download(company, group_by="column",period='1d')
-    currentAction = data['Close'].values[0]
-    float(currentAction)
-    return currentAction
+def getIdentifierInstrument(company : str, AssetType : str):
+    url = f"https://gateway.saxobank.com/sim/openapi/ref/v1/instruments?KeyWords={company}&AssetTypes={AssetType}"
+    r=http.request('GET',url, headers=headerRequest)
+    data = json.loads(r.data)
+    identifier = data['Data'][0]['Identifier']
+    return (int(identifier))
+
+def getUicInstrument(Identifier:int,AssetType : str):
+    url = f"https://gateway.saxobank.com/sim/openapi/ref/v1/instruments/details/{Identifier}/{AssetType}"
+    r=http.request('GET',url, headers=headerRequest)
+    data = json.loads(r.data)
+    uic = data['Uic']
+    return (int(uic))
+
+def getCurrentAction(Company : str, AssetType : str):
+    company = Company
+    assetType = AssetType
+    identifier = getIdentifierInstrument(company,assetType)
+    uic = getUicInstrument(identifier,assetType)
+    
+    url = f"https://gateway.saxobank.com/sim/openapi/trade/v1/infoprices/list?AccountKey={key}&Uics={uic}&AssetType={AssetType}"
+    r=http.request('GET',url, headers=headerRequest)
+    data = json.loads(r.data)
+    
+    currentAction = data['Data'][0]['Quote']['Ask']
+    return (float(currentAction))
 
 def getAllOrdersAccount():
     urlSaxo= f"https://gateway.saxobank.com/sim/openapi/port/v1/orders/me"
@@ -49,5 +70,4 @@ def sellOrder():
     print (r.status)
     return r.data
     
-print (getCurrentAction("RI.PA"))
-print (getAllOrdersAccount())
+print (getCurrentAction(Company="RI:xpar",AssetType="Stock"))
