@@ -1,3 +1,7 @@
 
 user.json
 README.md
+.idea/
+.vscode/
+__pycache__/
+trader-env/
